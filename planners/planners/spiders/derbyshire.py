@@ -114,7 +114,7 @@ class DerbyshireSpider(scrapy.Spider):
                 for i in links:
                     abs_i  =f'https://planning.derbyshire.gov.uk{i}'
                     self.listhref.append(abs_i)
-                break
+                
 
             except:
                 break
