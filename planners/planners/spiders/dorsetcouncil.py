@@ -85,7 +85,7 @@ class DorsetcouncilSpider(scrapy.Spider):
             x = 1
             while True:
                 try:
-                    nextPl = self.driver.find_element('xpath',"(//a[text()='Next'])[1]")
+                    nextPl = self.driver.find_element('xpath',"(//input[@title='Next'])[1]")
                     self.driver.execute_script("arguments[0].scrollIntoView();", nextPl)
                     self.driver.execute_script("arguments[0].click();", nextPl)
                     sleep(3)
@@ -104,8 +104,151 @@ class DorsetcouncilSpider(scrapy.Spider):
                     for i in links:
                         abs_i  =f'https://planning.dorsetcouncil.gov.uk/{i}'
                         self.listhref.append(abs_i)
-                    break
+                    
 
                 except:
                     break
 
+            
+            #opening planning page
+            self.drivera.get("https://planning.dorsetcouncil.gov.uk/disclaimer.aspx?returnURL=%2fadvsearch.aspx%3fAspxAutoDetectCookieSupport%3d1")
+
+            try:
+                self.drivera.find_element('xpath',"//input[@value='Accept']").click()
+            except:
+                pass
+            
+            sleep(3)
+
+            try:
+                self.drivera.find_element('xpath',"(//input[@value='Search'])[3]").click()
+            except:
+                try:
+                    self.drivera.find_element('xpath',"(//input[@value='Search'])[3]").click()
+                except:
+                    pass
+            sleep(5)
+
+            for ai in self.listhref:
+                self.drivera.get(ai)
+                sleep(2)
+                page = self.drivera.page_source
+                html = Selector(text=page)
+
+                
+                each = {}
+                each['planningUrl'] = ai
+
+                box = html.xpath("//span[@class='applabel']")
+                for i in box:
+                    table_hd = i.xpath(".//text()").get()
+                    if table_hd:
+                        table_hd = stripper(table_hd)
+                        second = i.xpath(".//following-sibling::p[1]/descendant::text()").getall()
+                        if second:
+                            allsecond = ''.join(second)
+                            allsecond = stripper(allsecond)
+                        else:
+                            second = ""
+                        try:
+                            fir = camel_case(table_hd)
+
+                            each[fir] = allsecond
+                        except:
+                            each[table_hd] = allsecond
+
+                #neighbours
+                box2  = html.xpath("//table[@id='ctl00_ContentPlaceHolder1_gridNeighbours']/descendant::tr")
+                hd = box2.xpath(".//th/text()").getall()
+                hd = [camel_case(i) for i in hd]
+                con_doc = []
+                if hd:
+                    for i in box2:
+                        bd = i.xpath(".//descendant::td/descendant::text()").getall()
+                        
+                        if bd:
+                            x = 0
+                            e_rel = {}
+                            for ii in bd:
+                                
+                                hed = hd[x]
+                                try:
+                                    e_rel[hed] = stripper(ii)
+                                except:
+                                    print('Couldnt unpack')
+                                x+=1
+                            con_doc.append(e_rel)
+                        each['neighbours'] = con_doc
+
+                #consultees
+                box2  = html.xpath("//table[@id='ctl00_ContentPlaceHolder1_gridConsultees']/descendant::tr")
+                hd = box2.xpath(".//th/text()").getall()
+                hd = [camel_case(i) for i in hd]
+                con_doc = []
+                if hd:
+                    for i in box2:
+                        bd = i.xpath(".//descendant::td/descendant::text()").getall()
+                        
+                        if bd:
+                            x = 0
+                            e_rel = {}
+                            for ii in bd:
+                                
+                                hed = hd[x]
+                                try:
+                                    e_rel[hed] = stripper(ii)
+                                except:
+                                    print('Couldnt unpack')
+                                x+=1
+                            con_doc.append(e_rel)
+                        each['consultees'] = con_doc
+
+                #history
+                box2  = html.xpath("//table[@id='ctl00_ContentPlaceHolder1_gridLinks']/descendant::tr")
+                hd = box2.xpath(".//th/text()").getall()
+                hd = [camel_case(i) for i in hd]
+                con_doc = []
+                if hd:
+                   
+                    for i in box2[1:]:
+                        try:
+                            e_rel={}
+                            
+                            e_rel['fileType'] = stripper(i.xpath(".//td[1]/descendant::text()").get())
+                            e_rel['fileNumber'] = stripper(i.xpath(".//td[2]/descendant::a/text()").get())
+                            e_rel['date'] = stripper(i.xpath(".//td[3]/descendant::text()").get())
+                            e_rel['location'] = stripper(i.xpath(".//td[4]/descendant::text()").get())
+                            e_rel['proposal'] = stripper(i.xpath(".//td[5]/descendant::text()").get())
+                                
+                            con_doc.append(e_rel)
+                        except:
+                            pass
+                    each['documents'] = con_doc
+
+
+                #documents
+                doc_doc = []
+                box5 = html.xpath("//table[@id='ctl00_ContentPlaceHolder1_DocumentsGrid_ctl00']/descendant::tr")
+                if box5:
+                    for i in box5[1:]:
+                        try:
+                            e_rel={}
+                            
+                            e_rel['fileName'] = stripper(i.xpath(".//td[2]/descendant::a/text()").get())
+                                
+                            doc_doc.append(e_rel)
+                        except:
+                            pass
+                        
+                    each['documents'] = doc_doc
+
+
+
+                yield each
+
+    def spider_closed(self, spider):
+        self.driver.close()
+        self.drivera.close()
+
+        spider.logger.info("Spider closed: %s", spider.name)
+    
