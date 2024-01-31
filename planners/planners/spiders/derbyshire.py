@@ -149,7 +149,7 @@ class DerbyshireSpider(scrapy.Spider):
                 pass
         sleep(3)
         
-        for ai in self.listhref[0:3]:
+        for ai in self.listhref:
             self.drivera.get(ai)
             sleep(2)
             page = self.drivera.page_source
@@ -177,7 +177,7 @@ class DerbyshireSpider(scrapy.Spider):
 
             #consultees
             box2  = html.xpath("//table[@summary='Consultees table']/descendant::tr")
-            hd = box2.xpath(".//th/descendant::text()").getall()
+            hd = box2.xpath(".//th/descendant::label/text()").getall()
             hd = [camel_case(i) for i in hd]
             con_doc = []
             if box2:
@@ -189,14 +189,14 @@ class DerbyshireSpider(scrapy.Spider):
                         for ii in bd:
                             
                             hed = hd[x]
-                            e_rel[hed] = ii
+                            e_rel[hed] = stripper(ii)
                             x+=1
                         con_doc.append(e_rel)
                     each['consultees'] = con_doc
 
              #constraint
             box3  = html.xpath("//div[@id='constraintsTab']/descendant::table/descendant::tr")
-            hd = box3.xpath(".//th/descendant::text()").getall()
+            hd = box3.xpath(".//th/descendant::label/text()").getall()
             hd = [camel_case(i) for i in hd]
             con_doc = []
             if box3:
@@ -208,7 +208,7 @@ class DerbyshireSpider(scrapy.Spider):
                         for ii in bd:
                             
                             hed = hd[x]
-                            e_rel[hed] = ii
+                            e_rel[hed] = stripper(ii)
                             x+=1
                         con_doc.append(e_rel)
                     each['constraints'] = con_doc
