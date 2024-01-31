@@ -149,7 +149,7 @@ class DorsetcouncilSpider(scrapy.Spider):
                             allsecond = ''.join(second)
                             allsecond = stripper(allsecond)
                         else:
-                            second = ""
+                            allsecond = ""
                         try:
                             fir = camel_case(table_hd)
 
