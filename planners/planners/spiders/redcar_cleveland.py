@@ -7,7 +7,7 @@ from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium import webdriver
 
 options = FirefoxOptions()
-#options.add_argument("--headless")
+options.add_argument("--headless")
 from time import sleep
 from scrapy import Selector
 from scrapy import signals
@@ -50,7 +50,7 @@ class RedcarClevelandSpider(scrapy.Spider):
         self.drivera = webdriver.Firefox(options=options,service=Service(GeckoDriverManager().install()))
         self.drivera.maximize_window()
 
-        #dispatcher.connect(self.spider_closed,signals.spider_closed)
+        dispatcher.connect(self.spider_closed,signals.spider_closed)
 
     def start_requests(self):
         yield scrapy.Request(url='https://www.ebay.com',callback=self.parse)
@@ -102,7 +102,7 @@ class RedcarClevelandSpider(scrapy.Spider):
                 for i in links:
                     abs_i  =f'https://planning.redcar-cleveland.gov.uk{i}'
                     self.listhref.append(abs_i)
-                break
+                
             except:
                 break
 
@@ -124,7 +124,7 @@ class RedcarClevelandSpider(scrapy.Spider):
                 pass
         sleep(5)
 
-        for ai in self.listhref[0:3]:
+        for ai in self.listhref:
             self.drivera.get(ai)
             sleep(2)
             page = self.drivera.page_source
@@ -162,12 +162,17 @@ class RedcarClevelandSpider(scrapy.Spider):
             if hd:
                 box2 = html.xpath("//div[@id='neighbours']/div[@class='list']/div[2]/div")
                 for i in box2:
-                    bd = i.xpath(".//descendant::div/descendant::text()").getall()
-                    
+                    bd = i.xpath(".//descendant::div")
+                    all = []
+                    for b in bd:
+                        tx = b.xpath(".//descendant::text()").get()
+                        if not tx:
+                            tx = ""
+                        all.append(tx)
                     if bd:
                         x = 0
                         e_rel = {}
-                        for ii in bd:
+                        for ii in all:
                             
                             hed = hd[x]
                             try:
@@ -186,12 +191,18 @@ class RedcarClevelandSpider(scrapy.Spider):
             if hd:
                 box2 = html.xpath("//div[@id='consultees']/div[@class='list']/div[2]/div")
                 for i in box2:
-                    bd = i.xpath(".//descendant::div/descendant::text()").getall()
+                    bd = i.xpath(".//descendant::div")
+                    all = []
+                    for b in bd:
+                        tx = b.xpath(".//descendant::text()").get()
+                        if not tx:
+                            tx = ""
+                        all.append(tx)
                     
                     if bd:
                         x = 0
                         e_rel = {}
-                        for ii in bd:
+                        for ii in all:
                             
                             hed = hd[x]
                             try:
@@ -210,12 +221,18 @@ class RedcarClevelandSpider(scrapy.Spider):
             if hd:
                 box2 = html.xpath("//div[@id='publicnotices']/div[@class='list']/div[2]/div")
                 for i in box2:
-                    bd = i.xpath(".//descendant::div/descendant::text()").getall()
+                    bd = i.xpath(".//descendant::div")
+                    all = []
+                    for b in bd:
+                        tx = b.xpath(".//descendant::text()").get()
+                        if not tx:
+                            tx = ""
+                        all.append(tx)
                     
                     if bd:
                         x = 0
                         e_rel = {}
-                        for ii in bd:
+                        for ii in all:
                             
                             hed = hd[x]
                             try:
@@ -226,7 +243,32 @@ class RedcarClevelandSpider(scrapy.Spider):
                         con_doc.append(e_rel)
                     each['publicNotices'] = con_doc
 
-            
+            #documents
+            box2  = html.xpath("//tr[@class='header']/following-sibling::tr")
+            con_doc = []
+            if box2:
+                for i in box2:
+                    try:
+                        e_rel={}
+                        l = stripper(i.xpath(".//td[1]/descendant::a/@href").get())
+                        if l:
+
+                            e_rel['documentLink'] = 'https://planning.redcar-cleveland.gov.uk'+ l
+                            e_rel['documentType'] = stripper(i.xpath(".//td[1]/descendant::a/text()").get())
+                            e_rel['size'] = stripper(i.xpath(".//td[2]/descendant::text()").get())
+                            e_rel['date'] = stripper(i.xpath(".//td[3]/descendant::text()").get())
+                                
+                            con_doc.append(e_rel)
+                    except:
+                        pass
+                each['documents'] = con_doc
+
             yield each
 
 
+    def spider_closed(self, spider):
+        self.driver.close()
+        self.drivera.close()
+
+        spider.logger.info("Spider closed: %s", spider.name)
+    

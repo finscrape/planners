@@ -223,7 +223,7 @@ class DorsetcouncilSpider(scrapy.Spider):
                             con_doc.append(e_rel)
                         except:
                             pass
-                    each['documents'] = con_doc
+                    each['history'] = con_doc
 
 
                 #documents
