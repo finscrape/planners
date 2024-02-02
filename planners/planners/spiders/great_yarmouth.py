@@ -7,7 +7,7 @@ from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium import webdriver
 
 options = FirefoxOptions()
-#options.add_argument("--headless")
+options.add_argument("--headless")
 from time import sleep
 from scrapy import Selector
 from scrapy import signals
@@ -51,7 +51,7 @@ class GreatYarmouthSpider(scrapy.Spider):
         self.drivera.maximize_window()
 
 
-        #dispatcher.connect(self.spider_closed,signals.spider_closed)
+        dispatcher.connect(self.spider_closed,signals.spider_closed)
 
     def start_requests(self):
         yield scrapy.Request(url="https://www.ebay.com",method="GET")

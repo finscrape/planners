@@ -42,7 +42,7 @@ def camel_case(s):
 
 class WorcestercitycouncilSpider(scrapy.Spider):
     name = "worcesterCityCouncil"
-    allowed_domains = ['a.com']
+    #allowed_domains = ['a.com']
     # start_urls = ['http://a.com/']
 
     def __init__(self, name=None, **kwargs):

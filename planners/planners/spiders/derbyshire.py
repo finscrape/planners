@@ -189,7 +189,10 @@ class DerbyshireSpider(scrapy.Spider):
                         for ii in bd:
                             
                             hed = hd[x]
-                            e_rel[hed] = stripper(ii)
+                            try:
+                                e_rel[hed] = stripper(ii)
+                            except:
+                                print('Couldnt unpack')
                             x+=1
                         con_doc.append(e_rel)
                     each['consultees'] = con_doc
@@ -208,7 +211,10 @@ class DerbyshireSpider(scrapy.Spider):
                         for ii in bd:
                             
                             hed = hd[x]
-                            e_rel[hed] = stripper(ii)
+                            try:
+                                e_rel[hed] = stripper(ii)
+                            except:
+                                print('Couldnt unpack')
                             x+=1
                         con_doc.append(e_rel)
                     each['constraints'] = con_doc
@@ -220,6 +226,7 @@ class DerbyshireSpider(scrapy.Spider):
                 for i in box5[2:]:
                     e_rel={}
                     l = stripper(i.xpath(".//td[2]/descendant::a/@href").get())
+                    
                     if l:
                         e_rel['fileLink'] = 'https://planning.derbyshire.gov.uk' + l
                     
