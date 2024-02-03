@@ -97,8 +97,7 @@ class DorsetcouncilSpider(scrapy.Spider):
                     page = self.driver.page_source
                     html = Selector(text=page)
 
-                    page = self.driver.page_source
-                    html = Selector(text=page)
+                    
 
                     links = html.xpath("//h2/a/@href").getall()
                     for i in links:
