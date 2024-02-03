@@ -147,13 +147,6 @@ class BroxbourneSpider(scrapy.Spider):
                     self.driver.execute_script("arguments[0].click();", searchPl)
                     
                     sleep(1.5)
-                    page = self.driver.page_source
-                    html = Selector(text=page)
-                    links = html.xpath("//td[@title='View Application Details']/a/@data-redirect-url").getall()
-                    self.listhref.extend(links)
-                    print(f'From  -----getting the {x} pageeee')
-                    print(f'From ------getting the {x} pageeee')
-                    print(f'From ------getting the {x} pageeee')
 
                     pagex = self.driver.page_source
                     html = Selector(text=pagex)
@@ -162,6 +155,11 @@ class BroxbourneSpider(scrapy.Spider):
                         continue
                     
                     self.listhref.extend(links)
+                    
+                    print(f'From  -----getting the {x} pageeee')
+                    print(f'From ------getting the {x} pageeee')
+                    print(f'From ------getting the {x} pageeee')
+
                     
                 except:
                     break
