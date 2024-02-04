@@ -65,7 +65,9 @@ class IslingtonSpider(scrapy.Spider):
             start += 1
             fd = d
             ffd = fd.split("/")
+            
             ffd = ffd[-1]
+            ffd = int(ffd)
             if ffd < 1980:
                 print('Too old to search from')
                 continue
