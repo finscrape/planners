@@ -7,7 +7,7 @@ from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium import webdriver
 
 options = FirefoxOptions()
-options.add_argument("--headless")
+#options.add_argument("--headless")
 from time import sleep
 from scrapy import Selector
 from scrapy import signals
@@ -52,7 +52,7 @@ class IslingtonSpider(scrapy.Spider):
 
         self.drivera = webdriver.Firefox(options=options,service=Service(GeckoDriverManager().install()))
         self.drivera.maximize_window()
-        dispatcher.connect(self.spider_closed,signals.spider_closed)
+        #dispatcher.connect(self.spider_closed,signals.spider_closed)
 
     def start_requests(self):
         yield scrapy.Request(url="https://www.ebay.com",method="GET")
@@ -73,8 +73,15 @@ class IslingtonSpider(scrapy.Spider):
                 continue
 
             nd = dates_str9[start]
-            self.driver.get("https://planning.islington.gov.uk/northgate/planningexplorer/generalsearch.aspx")
-            sleep(3)
+            try:
+                self.driver.get("https://planning.islington.gov.uk/northgate/planningexplorer/generalsearch.aspx")
+                sleep(3)
+            except:
+                try:
+                    self.driver.get("https://planning.islington.gov.uk/northgate/planningexplorer/generalsearch.aspx")
+                    sleep(3)
+                except:
+                    continue
 
             try:
                 self.driver.find_element('xpath',"//input[@id='rbRange']").click()

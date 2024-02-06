@@ -7,7 +7,7 @@ from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium import webdriver
 
 options = FirefoxOptions()
-options.add_argument("--headless")
+# options.add_argument("--headless")
 from time import sleep
 from scrapy import Selector
 from scrapy import signals
@@ -50,7 +50,7 @@ class IpswichSpider(scrapy.Spider):
 
         self.drivera = webdriver.Firefox(options=options,service=Service(GeckoDriverManager().install()))
         self.drivera.maximize_window()
-        dispatcher.connect(self.spider_closed,signals.spider_closed)
+        # dispatcher.connect(self.spider_closed,signals.spider_closed)
 
     def start_requests(self):
         yield scrapy.Request(url="https://www.ebay.com",method="GET")
@@ -66,13 +66,20 @@ class IpswichSpider(scrapy.Spider):
             
             ffd = ffd[-1]
             ffd = int(ffd)
-            if ffd < 1945:
+            if ffd < 1948:
                 print('Too old to search from')
                 continue
 
             nd = dates_str9[start]
-            self.driver.get("https://ppc.ipswich.gov.uk/appnsearch.asp")
-            sleep(3)
+            try:
+                self.driver.get("https://ppc.ipswich.gov.uk/appnsearch.asp")
+                sleep(3)
+            except:
+                try:
+                    self.driver.get("https://ppc.ipswich.gov.uk/appnsearch.asp")
+                    sleep(3)
+                except:
+                    continue
 
             try:
                 #date picker
@@ -101,9 +108,11 @@ class IpswichSpider(scrapy.Spider):
 
             
             sleep(3)
-            
-            pagex = self.driver.page_source
-            html = Selector(text=pagex)
+            try:
+                pagex = self.driver.page_source
+                html = Selector(text=pagex)
+            except:
+                continue
             links = html.xpath("//tr/td/a[1]/@href").getall()
             if not links:
                 continue
@@ -119,7 +128,7 @@ class IpswichSpider(scrapy.Spider):
                 x += 1
               
                 try:
-                    searchPl = self.driver.find_element("xpath","(//img[@title='Next Page'])[1]")
+                    searchPl = self.driver.find_element("xpath","(//a/img[@title='Next Page'])[1]")
                     self.driver.execute_script("arguments[0].scrollIntoView();", searchPl)
                     self.driver.execute_script("arguments[0].click();", searchPl)
                     

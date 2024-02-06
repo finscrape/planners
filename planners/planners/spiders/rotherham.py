@@ -70,8 +70,16 @@ class RotherhamSpider(scrapy.Spider):
                 continue
 
             nd = dates_strx[start]
-            self.driver.get("https://planning.rotherham.gov.uk/search.asp")
-            sleep(3)
+            try:
+                self.driver.get("https://planning.rotherham.gov.uk/search.asp")
+                sleep(3)
+            except:
+                try:
+                    self.driver.get("https://planning.rotherham.gov.uk/search.asp")
+                    sleep(3)
+                except:
+                    continue
+
 
             try:
                 #date picker
@@ -176,50 +184,59 @@ class RotherhamSpider(scrapy.Spider):
             dec_prog = html.xpath("//a[contains(text(),'Summary')]/@href | //a[contains(text(),'Details')]/@href").getall()
             doc_li = f'https://rotherham.planportal.co.uk/?id={id}'
             
-            for i in dec_prog:
-                abs_i = f'https://planning.rotherham.gov.uk/{i}'
-                self.drivera.get(abs_i)
-                sleep(1)
-                page = self.drivera.page_source
-                html = Selector(text=page)
+            if dec_prog:
+                for i in dec_prog:
+                    abs_i = f'https://planning.rotherham.gov.uk/{i}'
+                    self.drivera.get(abs_i)
+                    sleep(1)
+                    page = self.drivera.page_source
+                    html = Selector(text=page)
 
-                
-                box = html.xpath("//th[@class='RecordTitle']")
-                for i in box:
-                    table_hd = i.xpath(".//descendant::text()").get()
-                    table_hd = stripper(table_hd)
-                    second = i.xpath(".//following-sibling::*[1]/descendant::text()").getall()
                     
-                    allsecond = ''.join(second)
-                    allsecond = stripper(allsecond)
-                    try:
-                        fir = camel_case(table_hd)
+                    box = html.xpath("//th[@class='RecordTitle']")
+                    for i in box:
+                        table_hd = i.xpath(".//descendant::text()").get()
+                        table_hd = stripper(table_hd)
+                        second = i.xpath(".//following-sibling::*[1]/descendant::text()").getall()
+                        
+                        allsecond = ''.join(second)
+                        allsecond = stripper(allsecond)
+                        try:
+                            fir = camel_case(table_hd)
 
-                        each[fir] = allsecond
-                    except:
-                        each[table_hd] = allsecond
+                            each[fir] = allsecond
+                        except:
+                            each[table_hd] = allsecond
 
             #documents
-            self.drivera.get(doc_li)
-            sleep(1)
+            try:
+                self.drivera.get(doc_li)
+                sleep(1)
+            except:
+                try:
+                    self.drivera.get(doc_li)
+                    sleep(1)
+                except:
+                    html = None
+
             page = self.drivera.page_source
             html = Selector(text=page)
 
-            
-            box = html.xpath("//table[contains(@id,'gridview-')]/descendant::tr")
-            if box:
-                doc_doc = []
-                for i in box:
-                    e_rel={}
-                    e_rel['description'] = stripper(i.xpath(".//td[2]/descendant::text()").get())
-                    e_rel['fileType'] = stripper(i.xpath(".//td[3]/descendant::text()").get())
-                    e_rel['fileSize'] = stripper(i.xpath(".//td[4]/descendant::text()").get())
-                    e_rel['datePublished'] = stripper(i.xpath(".//td[5]/descendant::text()").get())
-                    doc_doc.append(e_rel)
-                
-                each['documents'] = doc_doc
+            if html:
+                box = html.xpath("//table[contains(@id,'gridview-')]/descendant::tr")
+                if box:
+                    doc_doc = []
+                    for i in box:
+                        e_rel={}
+                        e_rel['description'] = stripper(i.xpath(".//td[2]/descendant::text()").get())
+                        e_rel['fileType'] = stripper(i.xpath(".//td[3]/descendant::text()").get())
+                        e_rel['fileSize'] = stripper(i.xpath(".//td[4]/descendant::text()").get())
+                        e_rel['datePublished'] = stripper(i.xpath(".//td[5]/descendant::text()").get())
+                        doc_doc.append(e_rel)
+                    
+                    each['documents'] = doc_doc
 
-            yield each
+                yield each
 
     def spider_closed(self, spider):
         self.driver.close()

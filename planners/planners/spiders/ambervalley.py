@@ -22,12 +22,12 @@ class AmbervalleySpider(scrapy.Spider):
 
         payload = "wardCode=&parishCode="
         headers = {
-        'Accept': ' application/json, text/javascript, */*; q=0.01',
-        'Accept-Encoding': ' gzip, deflate, br',
-        'Accept-Language': ' en-US,en;q=0.9',
-        'Connection': ' keep-alive',
-        'Content-Length': ' 21',
-        'Content-Type': ' application/x-www-form-urlencoded; charset=UTF-8'
+        'Accept': 'application/json, text/javascript, */*; q=0.01',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Connection': 'keep-alive',
+        'Content-Length': '21',
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
         }
 
         response = requests.request("POST", url, headers=headers, data=payload)
