@@ -65,10 +65,32 @@ class BroxbourneSpider(scrapy.Spider):
 
             start += 1
             fd = d
+            ffd = fd.split("/")
+            
+            ffd = ffd[-1]
+            ffd = int(ffd)
+            if ffd < 1990:
+                print('Too old to search from')
+                continue
+            
             nd = dates_strx[start]
+            try:
+                self.driver.get("https://www.bookstoscrape.com")
+            except:
+                pass
+            
+            try:
         
-            self.driver.get("https://planning.broxbourne.gov.uk/LPAssure/ES/Presentation/Planning/OnlinePlanning/OnlinePlanningSearch#")
-            sleep(3)
+                self.driver.get("https://planning.broxbourne.gov.uk/LPAssure/ES/Presentation/Planning/OnlinePlanning/OnlinePlanningSearch#")
+                sleep(3)
+            except:
+                try:
+            
+                    self.driver.get("https://planning.broxbourne.gov.uk/LPAssure/ES/Presentation/Planning/OnlinePlanning/OnlinePlanningSearch#")
+                    sleep(3)
+                except:
+                    continue
+                
             try:
                 self.driver.find_element("xpath","//a[@onclick='AcceptCookies();']").click()
             except:
@@ -181,16 +203,35 @@ class BroxbourneSpider(scrapy.Spider):
         for i in self.listhref:
             ai = f'https://planning.broxbourne.gov.uk{i}'
             
-            self.drivera.get(ai)
+            try:
+                self.driver.get("https://www.bookstoscrape.com")
+            except:
+                pass
+            
+            try:
+                self.drivera.get(ai)
+            except:
+                try:
+                    self.drivera.get(ai)
+                except:
+                    continue
+                
 
             sleep(3)
-            page = self.drivera.page_source
-            html = Selector(text=page)
-            
+            try:
+                page = self.drivera.page_source
+                html = Selector(text=page)
+            except:
+                sleep(10)
+                continue
+                
             
             each = {}
             each['planningUrl'] = ai
             each['applicationId'] = html.xpath("//span[@id='spnApplicationId']/text()").get()
+            if not each['applicationId']:
+                continue
+            
             each['applicationDisplayAddress'] = html.xpath("//label[@id='applicationDisplayAddress']/text()").get()
 
             box = html.xpath("//td[@class='width-30']")
@@ -212,9 +253,12 @@ class BroxbourneSpider(scrapy.Spider):
                         each[table_hd] = allsecond
 
             
-
-            self.drivera.find_element("xpath","//li[@id='RelatedPlanningApplications_tab']/a").click()
-            sleep(2)
+            try:
+                self.drivera.find_element("xpath","//li[@id='RelatedPlanningApplications_tab']/a").click()
+                sleep(2)
+            except:
+                yield each
+                continue
 
             page = self.drivera.page_source
             html = Selector(text=page)
@@ -241,10 +285,13 @@ class BroxbourneSpider(scrapy.Spider):
                 each['relatingPlanningApplications'] = con_doc
 
             
-            
-            self.drivera.find_element("xpath","//li[@id='Documents_tab']/a").click()
-            
-            sleep(2)
+            try:
+                self.drivera.find_element("xpath","//li[@id='Documents_tab']/a").click()
+                
+                sleep(2)
+            except:
+                yield each
+                continue
 
             page = self.drivera.page_source
             html = Selector(text=page)
@@ -272,7 +319,10 @@ class BroxbourneSpider(scrapy.Spider):
             yield each
 
     def spider_closed(self, spider):
-        self.driver.quit()
-        self.drivera.quit()
+        try:
+            self.driver.quit()
+            self.drivera.quit()
+        except:
+            pass
         spider.logger.info("Spider closed: %s", spider.name)
       
