@@ -11,6 +11,9 @@ options.add_argument("--headless")
 from time import sleep
 from scrapy import Selector
 from scrapy import signals
+service = Service(executable_path=r'C:\Users\stagnator\Desktop\scrapy_proj\planners\geckodriver.exe')
+servicea = Service(executable_path=r'C:\Users\stagnator\Desktop\scrapy_proj\planners\geckodriver.exe')
+options.binary_location = r'C:\Program Files\Mozilla Firefox\firefox.exe'
 
 
 from re import sub
@@ -43,12 +46,14 @@ class DudleySpider(scrapy.Spider):
 
     def __init__(self, name=None, **kwargs):
         self.listhref  = []
+        self.scr =0
         self.plan = 0
         self.total = []
-        self.driver = webdriver.Firefox(options=options,service=Service(GeckoDriverManager().install()))
+        self.allplan = []
+        self.driver = webdriver.Firefox(options=options,service=service)
         self.driver.maximize_window()
 
-        self.drivera = webdriver.Firefox(options=options,service=Service(GeckoDriverManager().install()))
+        self.drivera = webdriver.Firefox(options=options,service=servicea)
         self.drivera.maximize_window()
 
 
@@ -58,135 +63,201 @@ class DudleySpider(scrapy.Spider):
         yield scrapy.Request(url="https://www.ebay.com",method="GET")
 
     def parse(self, response):
-        start = 0
         
         
-        for d in dates_str6[0:-1]:
-
-            start += 1
-            fd = d
-            nd = dates_str6[start]
-
-            self.driver.get("https://www5.dudley.gov.uk/swiftlg/apas/run/Wphappcriteria.display")
-            sleep(3)
-
-            try:
-                #date picker
-                fromDate = self.driver.find_element("xpath","//input[@name='REGFROMDATE.MAINBODY.WPACIS.1']")
-
-                fromDate.clear()
-
-                fromDate.send_keys(fd)
-
-                fromto = self.driver.find_element("xpath","//input[@name='REGTODATE.MAINBODY.WPACIS.1']")
-                fromto.clear()
-
-                fromto.send_keys(nd)
-            except:
+        dates_str6s = [dates_str6[i:i+3] for i in range(0,len(dates_str6),3)]
+        for li in dates_str6s:
+            
+            fd = li[-1]
+            ffd = fd.split("/")
+            
+            ffd = ffd[-1]
+            ffd = int(ffd)
+            #1980-1996
+            if ffd < 1990:
+                print('Too old to search from')
                 continue
 
-            sleep(1)
+            start = 0
+            self.listhref = []
+            self.plan = 0
+            for d in li[0:-1]:
 
-            try:
-                self.driver.find_element('xpath',"//input[@name='SEARCHBUTTON.MAINBODY.WPACIS.1']").click()
-            except:
+                start += 1
+                fd = d
+                nd = li[start]
+
+                self.driver.get("https://www5.dudley.gov.uk/swiftlg/apas/run/Wphappcriteria.display")
+                sleep(3)
+
+                try:
+                    #date picker
+                    fromDate = self.driver.find_element("xpath","//input[@name='REGFROMDATE.MAINBODY.WPACIS.1']")
+
+                    fromDate.clear()
+
+                    fromDate.send_keys(fd)
+
+                    fromto = self.driver.find_element("xpath","//input[@name='REGTODATE.MAINBODY.WPACIS.1']")
+                    fromto.clear()
+
+                    fromto.send_keys(nd)
+                except:
+                    continue
+
+                sleep(1)
+
                 try:
                     self.driver.find_element('xpath',"//input[@name='SEARCHBUTTON.MAINBODY.WPACIS.1']").click()
                 except:
-                    pass
-            sleep(3)
-            
-            
-
-            pagex = self.driver.page_source
-            html = Selector(text=pagex)
-            links = html.xpath("//td[@class='apas_tblContent']/a/@href").getall()
-            if not links:
-                continue
-            self.listhref.extend(links)
-            print('Date search')
-            print(f'From {fd} to {nd}')
-            print(f'From {fd} to {nd}')
-            print(f'From {fd} to {nd}')
-            
-            next_urls = html.xpath("//p[contains(text(),'Pages :')]/a/@href").getall()
-            if not next_urls:
-                continue
-            for i in next_urls:
-                abs_i = f'https://www5.dudley.gov.uk/swiftlg/apas/run/{i}'
-                self.driver.get(abs_i)
-                sleep(2)
-                pagex = self.driver.page_source
+                    try:
+                        self.driver.find_element('xpath',"//input[@name='SEARCHBUTTON.MAINBODY.WPACIS.1']").click()
+                    except:
+                        pass
+                sleep(3)
+                
+                
+                try:
+                    pagex = self.driver.page_source
+                except:
+                    continue
                 html = Selector(text=pagex)
                 links = html.xpath("//td[@class='apas_tblContent']/a/@href").getall()
                 if not links:
                     continue
                 self.listhref.extend(links)
                 print('Date search')
-                print(f'Next From {fd} to {nd}')
-                print(f'Next From {fd} to {nd}')
-                print(f'Next From {fd} to {nd}')
-        for i in self.listhref:
-            ai = f'https://www5.dudley.gov.uk/swiftlg/apas/run/{i}'
-            yield scrapy.Request(url=ai,callback=self.details)
-    def details(self,response):        
-            
-            
-            each = {}
-            each['planningUrl'] = response.url
-
-            box = response.xpath("//span[@class='apas']")
-            for i in box:
-                table_hd = i.xpath(".//descendant::text()").get()
-                if table_hd:
-                    table_hd = stripper(table_hd)
-                    second = i.xpath(".//following-sibling::p[@class='fieldset_data'][1]/descendant::text()").getall()
-                    if second:
-                        allsecond = ''.join(second)
-                        allsecond = stripper(allsecond)
-                    else:
-                        allsecond = ""
+                print(f'From {fd} to {nd}')
+                print(f'From {fd} to {nd}')
+                print(f'From {fd} to {nd}')
+                
+                next_urls = html.xpath("//p[contains(text(),'Pages :')]/a/@href").getall()
+                if not next_urls:
+                    continue
+                for i in next_urls:
+                    abs_i = f'https://www5.dudley.gov.uk/swiftlg/apas/run/{i}'
+                    self.driver.get(abs_i)
+                    sleep(2)
                     try:
-                        fir = camel_case(table_hd)
-
-                        each[fir] = allsecond
+                        pagex = self.driver.page_source
                     except:
-                        each[table_hd] = allsecond
-
-            doc_li = response.xpath("//h2[text()='Associated Media']/following-sibling::a/@href").get()
-            if doc_li:
-                yield scrapy.Request(url=doc_li,callback=self.docs,meta={'each':each})
-            else:
-                yield each
-    
-    def docs(self,response):
-        #documents
-        each = response.meta['each']
-        box2  = response.xpath("//table[@class='AIMTable']/descendant::tr")
-        if box2:
-            con_doc = []
-            for i in box2[1:]:
+                        continue
+                    html = Selector(text=pagex)
+                    links = html.xpath("//td[@class='apas_tblContent']/a/@href").getall()
+                    if not links:
+                        continue
+                    self.listhref.extend(links)
+                    print('Date search')
+                    print(f'Next From {fd} to {nd}')
+                    print(f'Next From {fd} to {nd}')
+                    print(f'Next From {fd} to {nd}')
+            for i in self.listhref:
+                ai = f'https://www5.dudley.gov.uk/swiftlg/apas/run/{i}'
                 try:
-                    e_rel={}
-                    l = stripper(i.xpath(".//td[1]/descendant::a/@href").get())
-                    if l:
-
-                        e_rel['documentLink'] = 'http://planningdocuments.dudley.gov.uk/AniteIM.WebSearch/(S(qzikue55bewyet55potqa0b4))/'+l
-                        e_rel['applicationRef'] = stripper(i.xpath(".//td[1]/descendant::a/text()").get())
-                        e_rel['documentDate'] = stripper(i.xpath(".//td[2]/descendant::text()").get())
-                        e_rel['documentType'] = stripper(i.xpath(".//td[3]/descendant::text()").get())
-                        e_rel['documentTitle'] = stripper(i.xpath(".//td[4]/descendant::text()").get())
-                        e_rel['documentNote'] = stripper(i.xpath(".//td[5]/descendant::text()").get())
-                            
-                        con_doc.append(e_rel)
+                    self.drivera.get(ai)
+                    sleep(1)
+                    page = self.drivera.page_source
+                    html = Selector(text=page)
                 except:
-                    pass
-            each['allDocuments'] = con_doc
+                    continue
+                
+                self.scr+=1
+                self.plan +=1
+                print(self.plan)
+                print(self.plan)
+                print('Total')
+                print(len(self.listhref))
+                print(len(self.listhref))
+                print(len(self.listhref))
+                print('Scraped')
+                print(self.scr)
+                print(self.scr)
+                print(self.scr)
+                
+                
+                each = {}
+                each['planningUrl'] = self.drivera.current_url
 
-        yield each
+                box = html.xpath("//span[@class='apas']")
+                for i in box:
+                    table_hd = i.xpath(".//descendant::text()").get()
+                    if table_hd:
+                        table_hd = stripper(table_hd)
+                        second = i.xpath(".//following-sibling::p[@class='fieldset_data'][1]/descendant::text()").getall()
+                        if second:
+                            allsecond = ''.join(second)
+                            allsecond = stripper(allsecond)
+                        else:
+                            allsecond = ""
+                        try:
+                            fir = camel_case(table_hd)
 
+                            each[fir] = allsecond
+                        except:
+                            each[table_hd] = allsecond
+
+                doc_li = html.xpath("//h2[text()='Associated Media']/following-sibling::a/@href").get()
+                if doc_li:
+                    try:
+                        self.drivera.get(doc_li)
+                        page = self.drivera.page_source
+                        html = Selector(text=page)
+                        box2  = html.xpath("//table[@class='AIMTable']/descendant::tr")
+                        if box2:
+                            con_doc = []
+                            for i in box2[1:]:
+                                try:
+                                    e_rel={}
+                                    l = stripper(i.xpath(".//td[1]/descendant::a/@href").get())
+                                    if l:
+
+                                        e_rel['documentLink'] = 'http://planningdocuments.dudley.gov.uk/AniteIM.WebSearch/(S(qzikue55bewyet55potqa0b4))/'+l
+                                        e_rel['applicationRef'] = stripper(i.xpath(".//td[1]/descendant::a/text()").get())
+                                        e_rel['documentDate'] = stripper(i.xpath(".//td[2]/descendant::text()").get())
+                                        e_rel['documentType'] = stripper(i.xpath(".//td[3]/descendant::text()").get())
+                                        e_rel['documentTitle'] = stripper(i.xpath(".//td[4]/descendant::text()").get())
+                                        e_rel['documentNote'] = stripper(i.xpath(".//td[5]/descendant::text()").get())
+                                            
+                                        con_doc.append(e_rel)
+                                except:
+                                    pass
+                            each['allDocuments'] = con_doc
+                    except:
+                        pass
+
+                    yield each
+
+                else:
+                    
+                    yield each
+            
+            #closing and opening the drivers 
+            self.driver.quit()
+            self.drivera.quit()
+            
+            print('Sleeping')
+            print('Sleeping')
+            print('Sleeping')
+            print(f"Starting from {li[0]}")
+            print(f"Starting from {li[0]}")
+            print(f"Starting from {li[0]}")
+            print('Sleeping')
+            sleep(45)
+
+            self.driver = webdriver.Firefox(options=options,service=service)
+            self.driver.maximize_window()
+
+            self.drivera = webdriver.Firefox(options=options,service=servicea)
+            self.drivera.maximize_window()
+
+            
+        
     def spider_closed(self, spider):
-        self.driver.quit()
-        self.drivera.quit()
+        try:
+            self.driver.quit()
+            self.drivera.quit()
+        except:
+            print('Couldnt quit!')
+            pass
         spider.logger.info("Spider closed: %s", spider.name)
       
