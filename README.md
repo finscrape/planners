@@ -1,4 +1,4 @@
-The guidelines below shows how to run the scripts.
+# The guidelines below shows how to run the scripts.
 
 1. Install the required modules in the modules.txt file using the pip command i.e
 
@@ -9,6 +9,7 @@ The guidelines below shows how to run the scripts.
 	scrapy crawl <name_of_script> -o <filename.json>
 
 For example: to run reader.py
+
 	scrapy crawl reader -o reader.json
 
 You can use scrapy crawl <name_of_script> -o <filename.json> -------This appends new data to an existing file. 
