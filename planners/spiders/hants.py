@@ -160,6 +160,12 @@ class HantsSpider(scrapy.Spider):
                     each['allDocuments'] = con_doc
 
                 yield each
+                self.plan+=1
+                tot = len(self.listhref)
+                print(f"{self.plan} out of {tot}")
+                print(f"{self.plan} out of {tot}")
+                print(f"{self.plan} out of {tot}")
+                
 
     def spider_closed(self, spider):
         self.driver.quit()

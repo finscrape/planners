@@ -60,7 +60,7 @@ class RotherhamSpider(scrapy.Spider):
 
     def parse(self,response):
         
-        dates_strxs = [dates_strx[i:i+6] for i in range(0,len(dates_strx),6)]
+        dates_strxs = [dates_strx[i:i+3] for i in range(0,len(dates_strx),3)]
         for li in dates_strxs:
             
             fd = li[-1]
@@ -70,7 +70,7 @@ class RotherhamSpider(scrapy.Spider):
             fmd = ffd[-2]
             fmd = int(fmd)
             ffd = int(ffd)
-            if ffd <= 1975:
+            if ffd <= 1998:
                 print('Too old to search from')
                 continue
             start = 0

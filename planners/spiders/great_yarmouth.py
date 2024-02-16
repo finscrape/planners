@@ -11,6 +11,9 @@ options.add_argument("--headless")
 from time import sleep
 from scrapy import Selector
 from scrapy import signals
+service = Service(executable_path=r'C:\Users\stagnator\Desktop\planners\geckodriver.exe')
+servicea = Service(executable_path=r'C:\Users\stagnator\Desktop\planners\geckodriver.exe')
+options.binary_location = r'C:\Program Files\Mozilla Firefox\firefox.exe'
 
 
 from re import sub
@@ -43,11 +46,12 @@ class GreatYarmouthSpider(scrapy.Spider):
     def __init__(self, name=None, **kwargs):
         self.listhref  = []
         self.plan = 0
+        self.scr =0
         self.total = []
-        self.driver = webdriver.Firefox(options=options,service=Service(GeckoDriverManager().install()))
+        self.driver = webdriver.Firefox(options=options,service=service)
         self.driver.maximize_window()
 
-        self.drivera = webdriver.Firefox(options=options,service=Service(GeckoDriverManager().install()))
+        self.drivera = webdriver.Firefox(options=options,service=servicea)
         self.drivera.maximize_window()
 
 
@@ -57,122 +61,159 @@ class GreatYarmouthSpider(scrapy.Spider):
         yield scrapy.Request(url="https://www.ebay.com",method="GET")
 
     def parse(self, response):
-        start = 0
         
-        for d in dates_strxx[0:-1]:
+        dates_strxxs = [dates_strxx[i:i+6] for i in range(0,len(dates_strxx),6)]
+        for li in dates_strxxs:
+            
+            
+            start = 0
+            self.listhref = []
+            self.plan = 0
+            for d in li[0:-1]:
 
-            start += 1
-            fd = d
-            nd = dates_strxx[start]
+                start += 1
+                fd = d
+                nd = li[start]
 
-            self.driver.get("https://planning.great-yarmouth.gov.uk/OcellaWeb/planningSearch")
-            sleep(3)
+            
+                self.driver.get("https://planning.great-yarmouth.gov.uk/OcellaWeb/planningSearch")
+                sleep(3)
 
-            try:
-                #date picker
-                fromDate = self.driver.find_element("xpath","//input[@name='receivedFrom']")
+                try:
+                    #date picker
+                    fromDate = self.driver.find_element("xpath","//input[@name='receivedFrom']")
 
-                fromDate.clear()
+                    fromDate.clear()
 
-                fromDate.send_keys(fd)
+                    fromDate.send_keys(fd)
 
-                fromto = self.driver.find_element("xpath","//input[@name='receivedTo']")
-                fromto.clear()
+                    fromto = self.driver.find_element("xpath","//input[@name='receivedTo']")
+                    fromto.clear()
 
-                fromto.send_keys(nd)
-            except:
-                continue
+                    fromto.send_keys(nd)
+                except:
+                    continue
 
-            sleep(1)
+                sleep(1)
 
-            try:
-                self.driver.find_element('xpath',"//input[@value='Search']").click()
-            except:
                 try:
                     self.driver.find_element('xpath',"//input[@value='Search']").click()
                 except:
-                    pass
-            sleep(3)
-            
-            try:
-                self.driver.find_element('xpath',"//input[@value='Show all results']").click()
-            except:
+                    try:
+                        self.driver.find_element('xpath',"//input[@value='Search']").click()
+                    except:
+                        pass
+                sleep(3)
+                
                 try:
                     self.driver.find_element('xpath',"//input[@value='Show all results']").click()
                 except:
-                    pass
-
-            pagex = self.driver.page_source
-            html = Selector(text=pagex)
-            links = html.xpath("//td/a/@href").getall()
-            self.listhref.extend(links)
-            print('Date search')
-            print(f'From {fd} to {nd}')
-            print(f'From {fd} to {nd}')
-            print(f'From {fd} to {nd}')
-
-        for i in self.listhref:
-            ai = f'https://planning.great-yarmouth.gov.uk/OcellaWeb/{i}'
-            
-            self.drivera.get(ai)
-
-            sleep(2)
-            page = self.drivera.page_source
-            html = Selector(text=page)
-
-            
-            each = {}
-            each['planningUrl'] = ai
-
-            box = html.xpath("(//table)[2]/descendant::tr")
-            for i in box:
-                table_hd = i.xpath(".//td[1]/descendant::text()").get()
-                if table_hd:
-                    table_hd = stripper(table_hd)
-                    second = i.xpath(".//td[2]/descendant::text()").getall()
-                    if second:
-                        allsecond = ''.join(second)
-                        allsecond = stripper(allsecond)
-                    else:
-                        allsecond = ""
                     try:
-                        fir = camel_case(table_hd)
-
-                        each[fir] = allsecond
-                    except:
-                        each[table_hd] = allsecond
-            ref = html.xpath("//td[strong/text()='Reference']/following-sibling::td/text()").get()
-            ref_i = f'https://portal.great-yarmouth.gov.uk/planning/search-applications#VIEW?RefType=PLANNINGCASE&KeyText={ref}'
-            self.drivera.get(ref_i)
-            sleep(2)
-            pagex = self.drivera.page_source
-            htmlx = Selector(text=pagex)
-            
-            
-            #documents
-            box2  = htmlx.xpath("//div[@class='civica-doclist']/ul/li")
-            con_doc = []
-            if box2:
-                
-                for i in box2:
-                    try:
-                        e_rel={}
-                        l = stripper(i.xpath(".//a/@href").get())
-                        if l:
-
-                            e_rel['fileLink'] = 'https://portal.great-yarmouth.gov.uk/planning/search-applications'+l
-                            e_rel['fileName'] = stripper(i.xpath(".//a/descendant::text()").get())
-                            e_rel['date'] = stripper(i.xpath(".//div/descendant::text()").get())
-                                
-                            con_doc.append(e_rel)
+                        self.driver.find_element('xpath',"//input[@value='Show all results']").click()
                     except:
                         pass
-                each['allDocuments'] = con_doc
 
+                pagex = self.driver.page_source
+                html = Selector(text=pagex)
+                links = html.xpath("//td/a/@href").getall()
+                self.listhref.extend(links)
+                print('Date search')
+                print(f'From {fd} to {nd}')
+                print(f'From {fd} to {nd}')
+                print(f'From {fd} to {nd}')
+
+            for i in self.listhref:
+                ai = f'https://planning.great-yarmouth.gov.uk/OcellaWeb/{i}'
+                
+                self.drivera.get(ai)
+
+                sleep(2)
+                page = self.drivera.page_source
+                html = Selector(text=page)
+
+                
+                each = {}
+                each['planningUrl'] = ai
+
+                box = html.xpath("(//table)[2]/descendant::tr")
+                for i in box:
+                    table_hd = i.xpath(".//td[1]/descendant::text()").get()
+                    if table_hd:
+                        table_hd = stripper(table_hd)
+                        second = i.xpath(".//td[2]/descendant::text()").getall()
+                        if second:
+                            allsecond = ''.join(second)
+                            allsecond = stripper(allsecond)
+                        else:
+                            allsecond = ""
+                        try:
+                            fir = camel_case(table_hd)
+
+                            each[fir] = allsecond
+                        except:
+                            each[table_hd] = allsecond
+                ref = html.xpath("//td[strong/text()='Reference']/following-sibling::td/text()").get()
+                ref_i = f'https://portal.great-yarmouth.gov.uk/planning/search-applications#VIEW?RefType=PLANNINGCASE&KeyText={ref}'
+                self.drivera.get(ref_i)
+                sleep(2)
+                pagex = self.drivera.page_source
+                htmlx = Selector(text=pagex)
+                
+                
+                #documents
+                box2  = htmlx.xpath("//div[@class='civica-doclist']/ul/li")
+                con_doc = []
+                if box2:
+                    
+                    for i in box2:
+                        try:
+                            e_rel={}
+                            l = stripper(i.xpath(".//a/@href").get())
+                            if l:
+
+                                e_rel['fileLink'] = 'https://portal.great-yarmouth.gov.uk/planning/search-applications'+l
+                                e_rel['fileName'] = stripper(i.xpath(".//a/descendant::text()").get())
+                                e_rel['date'] = stripper(i.xpath(".//div/descendant::text()").get())
+                                    
+                                con_doc.append(e_rel)
+                        except:
+                            pass
+                    each['allDocuments'] = con_doc
+
+                
+
+
+                yield each
+                self.plan+=1
+                self.scr+=1
+                print(self.plan)
+                print(self.plan)
+                print("Total:")
+                print(len(self.listhref))
+                print(len(self.listhref))
+                print('Scraped')
+                print(self.scr)
+                print(self.scr)
+                print(self.scr)
+
+             #closing and opening the drivers 
+            self.driver.quit()
+            self.drivera.quit()
             
+            print('Sleeping')
+            print('Sleeping')
+            print('Sleeping')
+            print(f"Starting from {li[0]}")
+            print(f"Starting from {li[0]}")
+            print(f"Starting from {li[0]}")
+            print('Sleeping')
+            sleep(30)
 
+            self.driver = webdriver.Firefox(options=options,service=service)
+            self.driver.maximize_window()
 
-            yield each
+            self.drivera = webdriver.Firefox(options=options,service=servicea)
+            self.drivera.maximize_window()
 
     def spider_closed(self, spider):
         self.driver.quit()
