@@ -3,8 +3,9 @@
 1. Install the required modules in the modules.txt file using the pip command i.e
 
 2. Install the required webdrivers and place the exe file in the planners directory i.e geckodriver,chromedriver
+3. Duplicate another copy of geckodriver and rename it as geckodrivera
 
-3. To run a specific script, open the terminal and type 
+4. To run a specific script, cd to the directory in the terminal and type 
 
 	scrapy crawl <name_of_script> -o <filename.json>
 
